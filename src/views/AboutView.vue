@@ -1,15 +1,27 @@
 <script setup lang="ts">
+import evaCreator from '@/engine/evaluate-creator';
 import { ref, reactive } from 'vue'
 import { openService } from '../services/c-b-service'
 var inputInfo = ref('')
 var stroyStr = ref('this is the begin of your stroy')
+var chatCompletionMessages = [{"role": "system", "content": "我们来合作编写一个故事的每个段落。我会给出主人公及事件。并发布好结果，坏结果，随机结果三种判定。每次请根据事件和判定描述出事件内容。在200字以内。"}];
 var imageObj = reactive({
   src: 'https://fuss10.elemecdn.com/d/e6/c4d93a3805b3ce3f323f7974e6f78jpeg.jpeg'
 })
 async function created() {
-  const someData = await openService.getSomeData()
+  const someData = await openService.getSomeData(inputInfo.value.toString());
   imageObj.src = someData
   console.log(someData)
+}
+async function callChatCompletionMessage() {
+  chatCompletionMessages.push({'role':'user', 'content': inputInfo.value.toString()});
+  const someDate = await openService.getNextPlace(chatCompletionMessages);
+  chatCompletionMessages.push({'role':'assistant', 'content': someDate});
+  stroyStr.value = someDate;
+}
+function testEvent() {
+  let currentInput = inputInfo.value;
+  stroyStr.value = evaCreator.getDate(currentInput);
 }
 </script>
 <template>
@@ -39,8 +51,8 @@ async function created() {
           >
           <el-row justify="center">
             <el-button type="primary">1</el-button>
-            <el-button type="success">2</el-button>
-            <el-button type="warning">3</el-button>
+            <el-button type="success" @click="testEvent()">2</el-button>
+            <el-button type="warning" @click="created()">3</el-button>
           </el-row>
           <el-row justify="center">
             <el-input
@@ -49,7 +61,7 @@ async function created() {
             />
           </el-row>
           <el-row justify="center">
-            <el-button type="primary" @click="created()">confirm</el-button>
+            <el-button type="primary" @click="callChatCompletionMessage()">confirm</el-button>
           </el-row>
         </el-col>
       </el-row>
